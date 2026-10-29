@@ -8,19 +8,31 @@ async function demarrerPasserelle() {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
+    introspection: true, // Indispensable pour la Sandbox en ligne
   });
 
-  // Clé d'API de test codée en dur (simulant une clé d'environnement)
   const CLIENT_API_KEY_VALIDE = "PROD_SECRET_GATEWAY_KEY_2026";
 
   const { url } = await startStandaloneServer(server, {
-    listen: { port: 4005 },
-    // CONFIGURATION SENIOR : Injection du contexte de sécurité
+    listen: { port: process.env.PORT || 4005 },
+    
+    // CONFIGURATION CORS SENIOR : On autorise la Sandbox Apollo à envoyer des Headers personnalisés
+    expressAppFromMiddleware: {
+      cors: {
+        origin: ['https://apollographql.com', 'https://apollographql.com'],
+        credentials: true,
+        allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key']
+      }
+    },
+
     context: async ({ req }) => {
-      // On extrait la clé d'API depuis les en-têtes HTTP de la requête
+      // Autoriser l'introspection de base sans clé pour l'interface graphique
+      if (req.body && req.body.operationName === 'IntrospectionQuery') {
+        return { clientAutorise: true };
+      }
+
       const apiKey = req.headers['x-api-key'];
 
-      // Si la clé est absente ou invalide, on lève une erreur de validation GraphQL standard
       if (!apiKey || apiKey !== CLIENT_API_KEY_VALIDE) {
         throw new GraphQLError("Accès refusé : Clé d'API invalide ou manquante dans les en-têtes HTTP.", {
           extensions: {
@@ -30,7 +42,6 @@ async function demarrerPasserelle() {
         });
       }
 
-      // Si tout est OK, on peut injecter des données utiles pour les résolveurs (par exemple un utilisateur simulé)
       return { clientAutorise: true };
     },
   });
