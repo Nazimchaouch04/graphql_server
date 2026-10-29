@@ -17,15 +17,14 @@ export const resolvers = {
       return await legacyService.rechercherProduitsParMotCle(motCle);
     }
   },
-  
-  // COUCHE MUTATION REQUiSE
   Mutation: {
     creerProduit: async (_, { nom, sku, prix, quantiteStock }) => {
       return await legacyService.insererNouveauProduit(nom, sku, prix, quantiteStock);
     }
   },
-
+  // Mapping strict pour garantir la résolution de l'id en tant que chaîne
   Produit: {
+    id: (parent) => String(parent.id),
     predictionRupture: async (parent) => {
       return await predictionLoader.load(parent.quantiteStock);
     }
