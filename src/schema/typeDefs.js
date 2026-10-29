@@ -20,7 +20,6 @@ export const typeDefs = `#graphql
     rechercherProduitsParNom(motCle: String!): [Produit!]!
   }
 
-  # NOUVELLE COUCHE : Écriture et modifications de données
   type Mutation {
     creerProduit(
       nom: String!
